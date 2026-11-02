@@ -38,12 +38,15 @@ class ReportController extends Controller
     private function aging(): array
     {
         $rows = Invoice::query()->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+            // Plain date comparisons, so this reads the same on every database and uses the ISP's "today".
             ->selectRaw("case
-                when due_date >= current_date then 'Not yet due'
-                when current_date - due_date <= 30 then '1–30 days'
-                when current_date - due_date <= 60 then '31–60 days'
-                when current_date - due_date <= 90 then '61–90 days'
-                else 'Over 90 days' end as bucket, count(*) as count, sum(balance) as total")
+                when due_date >= ? then 'Not yet due'
+                when due_date >= ? then '1–30 days'
+                when due_date >= ? then '31–60 days'
+                when due_date >= ? then '61–90 days'
+                else 'Over 90 days' end as bucket, count(*) as count, sum(balance) as total", [
+                today()->toDateString(), today()->subDays(30)->toDateString(), today()->subDays(60)->toDateString(), today()->subDays(90)->toDateString(),
+            ])
             ->groupBy('bucket')->get()->keyBy('bucket');
 
         return collect(['Not yet due', '1–30 days', '31–60 days', '61–90 days', 'Over 90 days'])->map(fn ($bucket) => [

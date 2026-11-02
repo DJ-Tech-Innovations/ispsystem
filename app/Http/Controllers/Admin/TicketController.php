@@ -10,6 +10,7 @@ use App\Models\Ticket;
 use App\Models\TicketAttachment;
 use App\Models\User;
 use App\Support\CsvExport;
+use App\Support\Search;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -139,8 +140,8 @@ class TicketController extends Controller
         return Ticket::query()->visibleTo($request->user())
             ->when($request->query('search'), function ($q, $term) {
                 $like = '%'.addcslashes($term, '%_\\').'%';
-                $q->where(fn ($w) => $w->whereAny(['number', 'subject'], 'ilike', $like)
-                    ->orWhereHas('customer', fn ($c) => $c->whereAny(['reference', 'first_name', 'last_name', 'organization_name'], 'ilike', $like)));
+                $q->where(fn ($w) => $w->whereAny(['number', 'subject'], Search::like(), $like)
+                    ->orWhereHas('customer', fn ($c) => $c->whereAny(['reference', 'first_name', 'last_name', 'organization_name'], Search::like(), $like)));
             })
             ->when($request->query('status') === 'active', fn ($q) => $q->active())
             ->when($request->query('status') && $request->query('status') !== 'active', fn ($q) => $q->where('status', $request->query('status')))

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\DeliverNotification;
 use App\Models\NotificationLog;
 use App\Models\NotificationTemplate;
+use App\Support\Search;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,7 +21,7 @@ class NotificationController extends Controller
             'logs' => NotificationLog::query()->with('customer:id,reference,first_name,last_name,organization_name')
                 ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
                 ->when($request->query('event'), fn ($q, $event) => $q->where('event', $event))
-                ->when($request->query('search'), fn ($q, $term) => $q->whereAny(['recipient', 'subject'], 'ilike', '%'.addcslashes($term, '%_\\').'%'))
+                ->when($request->query('search'), fn ($q, $term) => $q->whereAny(['recipient', 'subject'], Search::like(), '%'.addcslashes($term, '%_\\').'%'))
                 ->latest()->paginate($request->integer('per_page', 25))->withQueryString(),
             'filters' => $request->only('status', 'event', 'search'),
             'events' => array_keys(DefaultTemplates::email()),

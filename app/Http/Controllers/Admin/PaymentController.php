@@ -8,6 +8,7 @@ use App\Http\Requests\PaymentRequest;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Support\CsvExport;
+use App\Support\Search;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -79,8 +80,8 @@ class PaymentController extends Controller
         return Payment::query()
             ->when($request->query('search'), function ($q, $term) {
                 $like = '%'.addcslashes($term, '%_\\').'%';
-                $q->where(fn ($w) => $w->whereAny(['reference', 'external_reference'], 'ilike', $like)
-                    ->orWhereHas('customer', fn ($c) => $c->whereAny(['reference', 'first_name', 'last_name', 'organization_name'], 'ilike', $like)));
+                $q->where(fn ($w) => $w->whereAny(['reference', 'external_reference'], Search::like(), $like)
+                    ->orWhereHas('customer', fn ($c) => $c->whereAny(['reference', 'first_name', 'last_name', 'organization_name'], Search::like(), $like)));
             })
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
             ->when($request->query('method'), fn ($q, $method) => $q->where('method', $method))

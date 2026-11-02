@@ -12,7 +12,7 @@ use App\Support\Money;
 use App\Support\Settings;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -134,9 +134,9 @@ class GenerateInvoices
 
                 return $invoice;
             });
-        } catch (QueryException $exception) {
-            // 23505: a concurrent run won the race for this period. That is the constraint doing its job.
-            if ($exception->getCode() !== '23505' || ! str_contains($exception->getMessage(), 'invoices_subscription_period_unique')) {
+        } catch (UniqueConstraintViolationException $exception) {
+            // A concurrent run won the race for this period. That is the constraint doing its job.
+            if (! str_contains($exception->getMessage(), 'invoices_subscription_period_unique')) {
                 throw $exception;
             }
             $subscription->refresh();

@@ -11,7 +11,7 @@ use App\Models\Subscription;
 use App\Support\Money;
 use App\Support\ReferenceNumber;
 use App\Support\Settings;
-use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -54,8 +54,8 @@ class PlanChangeService
 
                 return $change;
             });
-        } catch (QueryException $exception) {
-            if ($exception->getCode() !== '23505' || ! str_contains($exception->getMessage(), 'plan_change_one_pending')) {
+        } catch (UniqueConstraintViolationException $exception) {
+            if (! str_contains($exception->getMessage(), 'plan_change_one_pending')) {
                 throw $exception;
             }
             throw ValidationException::withMessages(['plan' => 'You already have an upgrade request waiting.']);

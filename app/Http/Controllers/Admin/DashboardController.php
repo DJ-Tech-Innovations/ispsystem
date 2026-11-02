@@ -77,7 +77,7 @@ class DashboardController extends Controller
     private function collectionsByMonth(): array
     {
         $rows = Payment::query()->where('status', PaymentStatus::Confirmed)->where('paid_at', '>=', now()->subMonths(5)->startOfMonth())
-            ->select(DB::raw("to_char(paid_at, 'YYYY-MM') as month"), DB::raw('sum(amount) as total'))
+            ->select(DB::raw((DB::connection()->getDriverName() === 'pgsql' ? "to_char(paid_at, 'YYYY-MM')" : "date_format(paid_at, '%Y-%m')").' as month'), DB::raw('sum(amount) as total'))
             ->groupBy('month')->pluck('total', 'month');
 
         return collect(range(5, 0))->map(function (int $ago) use ($rows) {

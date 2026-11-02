@@ -1,0 +1,1 @@
+import{t as e}from"./use-shared-BQN7I5EL.js";import{y as t}from"./button-DMP1IZv1.js";var n=t();function r({permission:t,children:r}){return e()(...[t].flat())?(0,n.jsx)(n.Fragment,{children:r}):null}export{r as t};

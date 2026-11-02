@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Support\Audit;
 use App\Support\CsvExport;
 use App\Support\ReferenceNumber;
+use App\Support\Search;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -90,7 +91,7 @@ class LeadController extends Controller
     private function filtered(Request $request): Builder
     {
         return Lead::query()
-            ->when($request->query('search'), fn ($q, $term) => $q->whereAny(['reference', 'name', 'email', 'mobile', 'address'], 'ilike', '%'.addcslashes($term, '%_\\').'%'))
+            ->when($request->query('search'), fn ($q, $term) => $q->whereAny(['reference', 'name', 'email', 'mobile', 'address'], Search::like(), '%'.addcslashes($term, '%_\\').'%'))
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
             ->when($request->query('source'), fn ($q, $source) => $q->where('source', $source))
             ->when($request->query('assigned_to'), fn ($q, $id) => $q->where('assigned_to', $id));

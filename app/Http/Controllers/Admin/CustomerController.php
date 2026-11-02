@@ -20,6 +20,7 @@ use App\Models\ServicePlan;
 use App\Models\User;
 use App\Support\CsvExport;
 use App\Support\ReferenceNumber;
+use App\Support\Search;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -200,8 +201,8 @@ class CustomerController extends Controller
         return Customer::query()
             ->when($request->query('search'), function ($q, $term) {
                 $like = '%'.addcslashes($term, '%_\\').'%';
-                $q->where(fn ($w) => $w->whereAny(['reference', 'first_name', 'last_name', 'organization_name', 'email', 'mobile', 'service_address'], 'ilike', $like)
-                    ->orWhereRaw("concat(first_name, ' ', last_name) ilike ?", [$like]));
+                $q->where(fn ($w) => $w->whereAny(['reference', 'first_name', 'last_name', 'organization_name', 'email', 'mobile', 'service_address'], Search::like(), $like)
+                    ->orWhereRaw("concat(first_name, ' ', last_name) ".Search::like().' ?', [$like]));
             })
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
             ->when($request->query('type'), fn ($q, $type) => $q->where('type', $type))

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\InvoiceRequest;
 use App\Models\Invoice;
 use App\Support\CsvExport;
+use App\Support\Search;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -105,8 +106,8 @@ class InvoiceController extends Controller
         return Invoice::query()
             ->when($request->query('search'), function ($q, $term) {
                 $like = '%'.addcslashes($term, '%_\\').'%';
-                $q->where(fn ($w) => $w->where('number', 'ilike', $like)
-                    ->orWhereHas('customer', fn ($c) => $c->whereAny(['reference', 'first_name', 'last_name', 'organization_name'], 'ilike', $like)));
+                $q->where(fn ($w) => $w->where('number', Search::like(), $like)
+                    ->orWhereHas('customer', fn ($c) => $c->whereAny(['reference', 'first_name', 'last_name', 'organization_name'], Search::like(), $like)));
             })
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
             ->when($request->date('from'), fn ($q, $from) => $q->whereDate('issue_date', '>=', $from))

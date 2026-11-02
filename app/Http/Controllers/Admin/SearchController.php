@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\Lead;
 use App\Models\Subscription;
 use App\Models\Ticket;
+use App\Support\Search;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -26,28 +27,28 @@ class SearchController extends Controller
         $results = [];
 
         if ($user->can('customers.view')) {
-            $results['Customers'] = Customer::query()->where(fn ($q) => $q->whereAny(['reference', 'first_name', 'last_name', 'organization_name', 'email', 'mobile'], 'ilike', $like)
-                ->orWhereRaw("concat(first_name, ' ', last_name) ilike ?", [$like]))
+            $results['Customers'] = Customer::query()->where(fn ($q) => $q->whereAny(['reference', 'first_name', 'last_name', 'organization_name', 'email', 'mobile'], Search::like(), $like)
+                ->orWhereRaw("concat(first_name, ' ', last_name) ".Search::like().' ?', [$like]))
                 ->limit(5)->get()->map(fn ($c) => ['title' => $c->name, 'subtitle' => $c->reference.' · '.$c->mobile, 'url' => route('customers.show', $c)]);
         }
         if ($user->can('leads.view')) {
-            $results['Leads'] = Lead::query()->whereAny(['reference', 'name', 'email', 'mobile'], 'ilike', $like)->limit(3)->get()
+            $results['Leads'] = Lead::query()->whereAny(['reference', 'name', 'email', 'mobile'], Search::like(), $like)->limit(3)->get()
                 ->map(fn ($l) => ['title' => $l->name, 'subtitle' => $l->reference.' · '.$l->status->label(), 'url' => route('leads.index', ['search' => $l->reference])]);
         }
         if ($user->can('subscriptions.view')) {
-            $results['Subscriptions'] = Subscription::query()->with('customer')->whereAny(['reference', 'service_address'], 'ilike', $like)->limit(3)->get()
+            $results['Subscriptions'] = Subscription::query()->with('customer')->whereAny(['reference', 'service_address'], Search::like(), $like)->limit(3)->get()
                 ->map(fn ($s) => ['title' => $s->reference, 'subtitle' => $s->customer->name, 'url' => route('subscriptions.show', $s)]);
         }
         if ($user->can('invoices.view')) {
-            $results['Invoices'] = Invoice::query()->with('customer')->where('number', 'ilike', $like)->limit(3)->get()
+            $results['Invoices'] = Invoice::query()->with('customer')->where('number', Search::like(), $like)->limit(3)->get()
                 ->map(fn ($i) => ['title' => $i->number, 'subtitle' => $i->customer->name.' · '.$i->status->label(), 'url' => route('invoices.show', $i)]);
         }
         if ($user->can('tickets.view')) {
-            $results['Tickets'] = Ticket::query()->visibleTo($user)->with('customer')->whereAny(['number', 'subject'], 'ilike', $like)->limit(3)->get()
+            $results['Tickets'] = Ticket::query()->visibleTo($user)->with('customer')->whereAny(['number', 'subject'], Search::like(), $like)->limit(3)->get()
                 ->map(fn ($t) => ['title' => $t->number.' · '.$t->subject, 'subtitle' => $t->customer->name, 'url' => route('tickets.show', $t)]);
         }
         if ($user->can('installations.view')) {
-            $results['Installations'] = InstallationJob::query()->visibleTo($user)->with('customer')->where('reference', 'ilike', $like)->limit(3)->get()
+            $results['Installations'] = InstallationJob::query()->visibleTo($user)->with('customer')->where('reference', Search::like(), $like)->limit(3)->get()
                 ->map(fn ($j) => ['title' => $j->reference, 'subtitle' => $j->customer->name, 'url' => route('installations.show', $j)]);
         }
 

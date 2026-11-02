@@ -7,6 +7,7 @@ use App\Http\Requests\UserRequest;
 use App\Models\User;
 use App\Support\Audit;
 use App\Support\PermissionCatalog;
+use App\Support\Search;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,7 +20,7 @@ class UserController extends Controller
     {
         return Inertia::render('users/index', [
             'users' => User::query()->staff()->with('roles:id,name')
-                ->when($request->query('search'), fn ($q, $term) => $q->whereAny(['name', 'email'], 'ilike', '%'.addcslashes($term, '%_\\').'%'))
+                ->when($request->query('search'), fn ($q, $term) => $q->whereAny(['name', 'email'], Search::like(), '%'.addcslashes($term, '%_\\').'%'))
                 ->when($request->query('role'), fn ($q, $role) => $q->role($role))
                 ->orderBy('name')->paginate($request->integer('per_page', 25))->withQueryString()
                 ->through(fn (User $u) => [...$u->only('id', 'name', 'email', 'phone', 'is_active', 'last_login_at'), 'role' => $u->roles->first()?->name]),

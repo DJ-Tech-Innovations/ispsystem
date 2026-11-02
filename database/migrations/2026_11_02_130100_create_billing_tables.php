@@ -1,8 +1,8 @@
 <?php
 
+use App\Support\UniqueOpenRow;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -53,7 +53,7 @@ return new class extends Migration
         });
 
         // A voided invoice may be reissued for its period; everything else must stay unique even under concurrent runs.
-        DB::statement("CREATE UNIQUE INDEX invoices_subscription_period_unique ON invoices (subscription_id, period_start) WHERE status <> 'void'");
+        UniqueOpenRow::add('invoices', 'invoices_subscription_period_unique', ['subscription_id', 'period_start'], "status <> 'void'");
 
         Schema::create('invoice_items', function (Blueprint $table) {
             $table->uuid('id')->primary();

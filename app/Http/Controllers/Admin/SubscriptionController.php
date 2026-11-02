@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Support\CsvExport;
 use App\Support\Money;
 use App\Support\ReferenceNumber;
+use App\Support\Search;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -125,8 +126,8 @@ class SubscriptionController extends Controller
         return Subscription::query()
             ->when($request->query('search'), function ($q, $term) {
                 $like = '%'.addcslashes($term, '%_\\').'%';
-                $q->where(fn ($w) => $w->whereAny(['reference', 'service_address'], 'ilike', $like)
-                    ->orWhereHas('customer', fn ($c) => $c->whereAny(['reference', 'first_name', 'last_name', 'organization_name'], 'ilike', $like)));
+                $q->where(fn ($w) => $w->whereAny(['reference', 'service_address'], Search::like(), $like)
+                    ->orWhereHas('customer', fn ($c) => $c->whereAny(['reference', 'first_name', 'last_name', 'organization_name'], Search::like(), $like)));
             })
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
             ->when($request->query('plan'), fn ($q, $plan) => $q->where('service_plan_id', $plan));

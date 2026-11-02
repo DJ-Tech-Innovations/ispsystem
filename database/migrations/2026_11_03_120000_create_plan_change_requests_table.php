@@ -1,10 +1,10 @@
 <?php
 
+use App\Support\UniqueOpenRow;
 use Database\Seeders\NotificationTemplateSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -31,7 +31,7 @@ return new class extends Migration
         });
 
         // The database itself refuses a second open request, even from a double click.
-        DB::statement("CREATE UNIQUE INDEX plan_change_one_pending ON plan_change_requests (subscription_id) WHERE status = 'pending'");
+        UniqueOpenRow::add('plan_change_requests', 'plan_change_one_pending', ['subscription_id'], "status = 'pending'");
 
         $grants = ['plan_changes.view' => ['administrator', 'billing', 'customer_service'], 'plan_changes.approve' => ['administrator', 'billing']];
         foreach ($grants as $name => $roles) {
